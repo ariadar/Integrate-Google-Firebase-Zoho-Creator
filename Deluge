@@ -1,0 +1,55 @@
+// Trigger On Successful Form Submission
+// Sign-In - Get Firebase Token
+headerMap = Map();
+headerMap.put("Content-Type","application/json");
+dataMap = Map();
+dataMap.put("Content-Type","application/octet-string");
+dataMap = '{"email":"' + input.Firebase_User_Email + '","password":"' + input.Firebase_User_PSW + '","returnSecureToken":true}';
+tokenresponse = invokeurl
+[
+	url :"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + input.Firebase_Web_API_Key
+	type :POST
+	parameters:dataMap
+	headers:headerMap
+];
+// debug
+// info tokenresponse;
+// Get Token
+input.Firebase_idToken = tokenresponse.getJSON("idToken");
+// POST to Firebase
+if(Firebase_ID == "")
+{
+	headerMap1 = Map();
+	headerMap1.put("Content-Type","application/json");
+	dataMap1 = Map();
+	dataMap1.put("Field_1",input.Field_1);
+	dataMap1.put("Zoho_Record_ID",input.ID);
+	response = invokeurl
+	[
+		url :input.Firebase_Project_URL + ".json?auth=" + input.Firebase_idToken
+		type :POST
+		parameters:dataMap1.toString()
+		headers:headerMap1
+	];
+	// debug
+	//info response;
+}
+// Get Firebase ID
+if(response.contains("name"))
+{
+	input.Firebase_ID = response.getJSON("name");
+}
+//Delete
+if(input.Firebase_ID != "" && input.Delete_field == true)
+{
+	headerMap2 = Map();
+	headerMap2.put("Content-Type","application/json");
+	response2 = invokeurl
+	[
+		url :input.Firebase_Project_URL + input.Firebase_ID + ".json?auth=" + input.Firebase_idToken
+		type :DELETE
+		headers:headerMap2
+	];
+	// debug
+	// info response2;
+}
