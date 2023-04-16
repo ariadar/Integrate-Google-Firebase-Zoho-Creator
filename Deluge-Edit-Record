@@ -1,0 +1,41 @@
+// Trigger on form submission
+// Fetch Admin Settings
+admin = Admin_Settings[ID != 0];
+input.Firebase_Project_URL = admin.Firebase_RTDB_URL;
+input.Firebase_Web_API_Key = admin.Firebase_Web_API_Key;
+input.Firebase_User_Email = admin.Firebase_User_Email;
+input.Firebase_User_PSW = admin.Firebase_User_PSW;
+// Sign-In - Get Token
+headerMap = Map();
+headerMap.put("Content-Type","application/json");
+dataMap = Map();
+dataMap.put("Content-Type","application/octet-string");
+dataMap = '{"email":"' + input.Firebase_User_Email + '","password":"' + input.Firebase_User_PSW + '","returnSecureToken":true}';
+tokenresponse = invokeurl
+[
+	url :"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + input.Firebase_Web_API_Key
+	type :POST
+	parameters:dataMap
+	headers:headerMap
+];
+// debug
+//info tokenresponse;
+input.Firebase_idToken = tokenresponse.getJSON("idToken");
+// PATCH to Firebase
+if(Firebase_ID != "")
+{
+	headerMap1 = Map();
+	headerMap1.put("Content-Type","application/json");
+	dataMap1 = Map();
+	dataMap1.put("Field_1",input.Field_1);
+	dataMap1.put("Zoho_Record_ID",input.ID);
+	response = invokeurl
+	[
+		url :input.Firebase_Project_URL + input.Firebase_ID + ".json?auth=" + input.Firebase_idToken
+		type :PATCH
+		parameters:dataMap1.toString()
+		headers:headerMap1
+	];
+	// debug
+	//info response;
+}
